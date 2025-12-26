@@ -25,7 +25,9 @@ generalNewData.py
 hcg.lp
 hyperTuner.py
 kill.sh
+# Ignore .txt files except CMakeLists.txt
 *.txt
+!CMakeLists.txt
 Placement_best0621.py
 PlacementBest0907.py
 PlacementFixedMacro.py
