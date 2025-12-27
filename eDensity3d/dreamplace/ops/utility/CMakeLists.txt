@@ -1,14 +1,42 @@
 cmake_minimum_required(VERSION 3.12)
 
-# Utilityæ¨¡å—æä¾›å¤´æ–‡ä»¶å’Œè¾…åŠ©å‡½æ•°ï¼Œä¸éœ€è¦Pythonç»‘å®š
-
-# åŒ…å«ç›®å½•ï¼Œä¾›å…¶ä»–æ¨¡å—ä½¿ç”¨
-target_include_directories(utility INTERFACE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
+# ÊÕ¼¯utility²Ù×÷Ô´ÎÄ¼ş
+set(UTILITY_SOURCES
+    src\msg.cpp
 )
 
-# å®‰è£…å¤´æ–‡ä»¶
-install(DIRECTORY src/ 
-    DESTINATION dreamplace/ops/utility
-    FILES_MATCHING PATTERN "*.h" PATTERN "*.cuh"
+# ´´½¨Python°ó¶¨
+pybind11_add_module(utility_cpp SHARED ${UTILITY_SOURCES})
+
+# Á´½Ó¿â
+target_link_libraries(utility_cpp PRIVATE 
+    torch
+    ${Boost_LIBRARIES}
 )
+
+# ÉèÖÃ±àÒëÊôĞÔ
+set_target_properties(utility_cpp PROPERTIES
+    CXX_STANDARD 14
+    POSITION_INDEPENDENT_CODE ON
+)
+
+# ÉèÖÃCUDAÊôĞÔ
+if(CUDA_FOUND)
+    set_target_properties(utility_cpp PROPERTIES
+        CUDA_SEPARABLE_COMPILATION ON
+    )
+    target_include_directories(utility_cpp PRIVATE ${CUDA_INCLUDE_DIRS})
+endif()
+
+# °üº¬Ä¿Â¼
+target_include_directories(utility_cpp PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/utility/src
+    ${TORCH_INCLUDE_DIRS}
+)
+
+# °²×°Ä£¿é
+install(TARGETS utility_cpp DESTINATION dreamplace/ops/utility)
+if(CUDA_FOUND)
+    install(TARGETS utility_cuda DESTINATION dreamplace/ops/utility)
+endif()

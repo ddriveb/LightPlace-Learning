@@ -1,34 +1,36 @@
 cmake_minimum_required(VERSION 3.12)
 
-# æ”¶é›†HPWLæ“ä½œæºæ–‡ä»¶
+# ÊÕ¼¯hpwl²Ù×÷Ô´ÎÄ¼ş
 set(HPWL_SOURCES
-    src/hpwl.cpp
-    src/hpwl_atomic.cpp
+    src\hpwl.cpp
+    src\hpwl_atomic.cpp
+    src\hpwl_cuda.cpp
+    src\hpwl_cuda_atomic.cpp
 )
 
 if(CUDA_FOUND)
     list(APPEND HPWL_SOURCES
-        src/hpwl_cuda.cpp
-        src/hpwl_cuda_atomic.cpp
+        src\hpwl_cuda_atomic_kernel.cu
+        src\hpwl_cuda_kernel.cu
     )
 endif()
 
-# åˆ›å»ºPythonç»‘å®š
+# ´´½¨Python°ó¶¨
 pybind11_add_module(hpwl_cpp SHARED ${HPWL_SOURCES})
 
-# é“¾æ¥åº“
+# Á´½Ó¿â
 target_link_libraries(hpwl_cpp PRIVATE 
     torch
     ${Boost_LIBRARIES}
 )
 
-# è®¾ç½®ç¼–è¯‘å±æ€§
+# ÉèÖÃ±àÒëÊôĞÔ
 set_target_properties(hpwl_cpp PROPERTIES
     CXX_STANDARD 14
     POSITION_INDEPENDENT_CODE ON
 )
 
-# è®¾ç½®CUDAç¼–è¯‘å±æ€§
+# ÉèÖÃCUDAÊôĞÔ
 if(CUDA_FOUND)
     set_target_properties(hpwl_cpp PROPERTIES
         CUDA_SEPARABLE_COMPILATION ON
@@ -36,39 +38,24 @@ if(CUDA_FOUND)
     target_include_directories(hpwl_cpp PRIVATE ${CUDA_INCLUDE_DIRS})
 endif()
 
-# åŒ…å«ç›®å½•
+# °üº¬Ä¿Â¼
 target_include_directories(hpwl_cpp PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/utility/src
     ${TORCH_INCLUDE_DIRS}
 )
 
-# å¦‚æœæœ‰CUDAï¼Œåˆ›å»ºCUDAç‰ˆæœ¬
+# Èç¹ûÓĞCUDA£¬´´½¨CUDA°æ±¾
 if(CUDA_FOUND)
-    set(HPWL_CUDA_SOURCES
-        src/hpwl_cuda.cpp
-        src/hpwl_cuda_atomic.cpp
+    pybind11_add_module(hpwl_cuda SHARED
     )
-    
-    pybind11_add_module(hpwl_cuda SHARED ${HPWL_CUDA_SOURCES})
     target_link_libraries(hpwl_cuda PRIVATE torch ${Boost_LIBRARIES})
     set_target_properties(hpwl_cuda PROPERTIES CXX_STANDARD 14 CUDA_SEPARABLE_COMPILATION ON)
     target_include_directories(hpwl_cuda PRIVATE ${CUDA_INCLUDE_DIRS} ${TORCH_INCLUDE_DIRS})
-    
-    pybind11_add_module(hpwl_cuda_atomic SHARED ${HPWL_CUDA_SOURCES})
-    target_link_libraries(hpwl_cuda_atomic PRIVATE torch ${Boost_LIBRARIES})
-    set_target_properties(hpwl_cuda_atomic PROPERTIES CXX_STANDARD 14 CUDA_SEPARABLE_COMPILATION ON)
-    target_include_directories(hpwl_cuda_atomic PRIVATE ${CUDA_INCLUDE_DIRS} ${TORCH_INCLUDE_DIRS})
 endif()
 
-# åˆ›å»ºatomicç‰ˆæœ¬
-pybind11_add_module(hpwl_cpp_atomic SHARED src/hpwl_atomic.cpp)
-target_link_libraries(hpwl_cpp_atomic PRIVATE torch ${Boost_LIBRARIES})
-set_target_properties(hpwl_cpp_atomic PROPERTIES CXX_STANDARD 14)
-target_include_directories(hpwl_cpp_atomic PRIVATE ${TORCH_INCLUDE_DIRS})
-
-# å®‰è£…æ¨¡å—
-install(TARGETS hpwl_cpp hpwl_cpp_atomic DESTINATION dreamplace/ops/hpwl)
+# °²×°Ä£¿é
+install(TARGETS hpwl_cpp DESTINATION dreamplace/ops/hpwl)
 if(CUDA_FOUND)
-    install(TARGETS hpwl_cuda hpwl_cuda_atomic DESTINATION dreamplace/ops/hpwl)
+    install(TARGETS hpwl_cuda DESTINATION dreamplace/ops/hpwl)
 endif()

@@ -1,33 +1,40 @@
 cmake_minimum_required(VERSION 3.12)
 
-# æ”¶é›†weighted_average_wirelengthæ“ä½œæºæ–‡ä»¶
+# ÊÕ¼¯weighted_average_wirelength²Ù×÷Ô´ÎÄ¼ş
 set(WEIGHTED_AVERAGE_WIRELENGTH_SOURCES
-    src/weighted_average_wirelength_atomic.cpp
+    src\weighted_average_wirelength.cpp
+    src\weighted_average_wirelength_atomic.cpp
+    src\weighted_average_wirelength_cuda.cpp
+    src\weighted_average_wirelength_cuda_atomic.cpp
+    src\weighted_average_wirelength_cuda_merged.cpp
+    src\weighted_average_wirelength_merged.cpp
 )
 
 if(CUDA_FOUND)
     list(APPEND WEIGHTED_AVERAGE_WIRELENGTH_SOURCES
-        src/weighted_average_wirelength_cuda_atomic.cpp
-        src/weighted_average_wirelength_cuda_merged.cpp
+        src\integrate_net_weights_cuda_kernel.cu
+        src\weighted_average_wirelength_cuda_atomic_kernel.cu
+        src\weighted_average_wirelength_cuda_kernel.cu
+        src\weighted_average_wirelength_cuda_merged_kernel.cu
     )
 endif()
 
-# åˆ›å»ºPythonç»‘å®š
+# ´´½¨Python°ó¶¨
 pybind11_add_module(weighted_average_wirelength_cpp SHARED ${WEIGHTED_AVERAGE_WIRELENGTH_SOURCES})
 
-# é“¾æ¥åº“
+# Á´½Ó¿â
 target_link_libraries(weighted_average_wirelength_cpp PRIVATE 
     torch
     ${Boost_LIBRARIES}
 )
 
-# è®¾ç½®ç¼–è¯‘å±æ€§
+# ÉèÖÃ±àÒëÊôĞÔ
 set_target_properties(weighted_average_wirelength_cpp PROPERTIES
     CXX_STANDARD 14
     POSITION_INDEPENDENT_CODE ON
 )
 
-# è®¾ç½®CUDAå±æ€§
+# ÉèÖÃCUDAÊôĞÔ
 if(CUDA_FOUND)
     set_target_properties(weighted_average_wirelength_cpp PROPERTIES
         CUDA_SEPARABLE_COMPILATION ON
@@ -35,28 +42,24 @@ if(CUDA_FOUND)
     target_include_directories(weighted_average_wirelength_cpp PRIVATE ${CUDA_INCLUDE_DIRS})
 endif()
 
-# åŒ…å«ç›®å½•
+# °üº¬Ä¿Â¼
 target_include_directories(weighted_average_wirelength_cpp PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/utility/src
     ${TORCH_INCLUDE_DIRS}
 )
 
-# å¦‚æœæœ‰CUDAï¼Œåˆ›å»ºCUDAç‰ˆæœ¬
+# Èç¹ûÓĞCUDA£¬´´½¨CUDA°æ±¾
 if(CUDA_FOUND)
-    pybind11_add_module(weighted_average_wirelength_cuda_atomic SHARED src/weighted_average_wirelength_cuda_atomic.cpp)
-    target_link_libraries(weighted_average_wirelength_cuda_atomic PRIVATE torch ${Boost_LIBRARIES})
-    set_target_properties(weighted_average_wirelength_cuda_atomic PROPERTIES CXX_STANDARD 14 CUDA_SEPARABLE_COMPILATION ON)
-    target_include_directories(weighted_average_wirelength_cuda_atomic PRIVATE ${CUDA_INCLUDE_DIRS} ${TORCH_INCLUDE_DIRS})
-    
-    pybind11_add_module(weighted_average_wirelength_cuda_merged SHARED src/weighted_average_wirelength_cuda_merged.cpp)
-    target_link_libraries(weighted_average_wirelength_cuda_merged PRIVATE torch ${Boost_LIBRARIES})
-    set_target_properties(weighted_average_wirelength_cuda_merged PROPERTIES CXX_STANDARD 14 CUDA_SEPARABLE_COMPILATION ON)
-    target_include_directories(weighted_average_wirelength_cuda_merged PRIVATE ${CUDA_INCLUDE_DIRS} ${TORCH_INCLUDE_DIRS})
+    pybind11_add_module(weighted_average_wirelength_cuda SHARED
+    )
+    target_link_libraries(weighted_average_wirelength_cuda PRIVATE torch ${Boost_LIBRARIES})
+    set_target_properties(weighted_average_wirelength_cuda PROPERTIES CXX_STANDARD 14 CUDA_SEPARABLE_COMPILATION ON)
+    target_include_directories(weighted_average_wirelength_cuda PRIVATE ${CUDA_INCLUDE_DIRS} ${TORCH_INCLUDE_DIRS})
 endif()
 
-# å®‰è£…æ¨¡å—
+# °²×°Ä£¿é
 install(TARGETS weighted_average_wirelength_cpp DESTINATION dreamplace/ops/weighted_average_wirelength)
 if(CUDA_FOUND)
-    install(TARGETS weighted_average_wirelength_cuda_atomic weighted_average_wirelength_cuda_merged DESTINATION dreamplace/ops/weighted_average_wirelength)
+    install(TARGETS weighted_average_wirelength_cuda DESTINATION dreamplace/ops/weighted_average_wirelength)
 endif()

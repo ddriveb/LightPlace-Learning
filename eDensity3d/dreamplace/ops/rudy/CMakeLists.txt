@@ -1,32 +1,33 @@
 cmake_minimum_required(VERSION 3.12)
 
-# æ”¶é›†rudyæ“ä½œæºæ–‡ä»¶
+# ÊÕ¼¯rudy²Ù×÷Ô´ÎÄ¼ş
 set(RUDY_SOURCES
-    src/rudy.cpp
+    src\rudy.cpp
+    src\rudy_cuda.cpp
 )
 
 if(CUDA_FOUND)
     list(APPEND RUDY_SOURCES
-        src/rudy_cuda.cpp
+        src\rudy_cuda_kernel.cu
     )
 endif()
 
-# åˆ›å»ºPythonç»‘å®š
+# ´´½¨Python°ó¶¨
 pybind11_add_module(rudy_cpp SHARED ${RUDY_SOURCES})
 
-# é“¾æ¥åº“
+# Á´½Ó¿â
 target_link_libraries(rudy_cpp PRIVATE 
     torch
     ${Boost_LIBRARIES}
 )
 
-# è®¾ç½®ç¼–è¯‘å±æ€§
+# ÉèÖÃ±àÒëÊôĞÔ
 set_target_properties(rudy_cpp PROPERTIES
     CXX_STANDARD 14
     POSITION_INDEPENDENT_CODE ON
 )
 
-# è®¾ç½®CUDAå±æ€§
+# ÉèÖÃCUDAÊôĞÔ
 if(CUDA_FOUND)
     set_target_properties(rudy_cpp PROPERTIES
         CUDA_SEPARABLE_COMPILATION ON
@@ -34,22 +35,23 @@ if(CUDA_FOUND)
     target_include_directories(rudy_cpp PRIVATE ${CUDA_INCLUDE_DIRS})
 endif()
 
-# åŒ…å«ç›®å½•
+# °üº¬Ä¿Â¼
 target_include_directories(rudy_cpp PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/utility/src
     ${TORCH_INCLUDE_DIRS}
 )
 
-# å¦‚æœæœ‰CUDAï¼Œåˆ›å»ºCUDAç‰ˆæœ¬
+# Èç¹ûÓĞCUDA£¬´´½¨CUDA°æ±¾
 if(CUDA_FOUND)
-    pybind11_add_module(rudy_cuda SHARED src/rudy_cuda.cpp)
+    pybind11_add_module(rudy_cuda SHARED
+    )
     target_link_libraries(rudy_cuda PRIVATE torch ${Boost_LIBRARIES})
     set_target_properties(rudy_cuda PROPERTIES CXX_STANDARD 14 CUDA_SEPARABLE_COMPILATION ON)
     target_include_directories(rudy_cuda PRIVATE ${CUDA_INCLUDE_DIRS} ${TORCH_INCLUDE_DIRS})
 endif()
 
-# å®‰è£…æ¨¡å—
+# °²×°Ä£¿é
 install(TARGETS rudy_cpp DESTINATION dreamplace/ops/rudy)
 if(CUDA_FOUND)
     install(TARGETS rudy_cuda DESTINATION dreamplace/ops/rudy)

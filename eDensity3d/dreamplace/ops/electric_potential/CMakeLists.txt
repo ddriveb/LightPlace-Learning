@@ -1,34 +1,36 @@
 cmake_minimum_required(VERSION 3.12)
 
-# æ”¶é›†electric_potentialæ“ä½œæºæ–‡ä»¶
+# ÊÕ¼¯electric_potential²Ù×÷Ô´ÎÄ¼ş
 set(ELECTRIC_POTENTIAL_SOURCES
-    src/electric_density_map.cpp
-    src/electric_force.cpp
+    src\electric_density_map.cpp
+    src\electric_density_map_cuda.cpp
+    src\electric_force.cpp
+    src\electric_force_cuda.cpp
 )
 
 if(CUDA_FOUND)
     list(APPEND ELECTRIC_POTENTIAL_SOURCES
-        src/electric_density_map_cuda.cpp
-        src/electric_force_cuda.cpp
+        src\electric_density_map_cuda_kernel.cu
+        src\electric_force_cuda_kernel.cu
     )
 endif()
 
-# åˆ›å»ºPythonç»‘å®š
+# ´´½¨Python°ó¶¨
 pybind11_add_module(electric_potential_cpp SHARED ${ELECTRIC_POTENTIAL_SOURCES})
 
-# é“¾æ¥åº“
+# Á´½Ó¿â
 target_link_libraries(electric_potential_cpp PRIVATE 
     torch
     ${Boost_LIBRARIES}
 )
 
-# è®¾ç½®ç¼–è¯‘å±æ€§
+# ÉèÖÃ±àÒëÊôĞÔ
 set_target_properties(electric_potential_cpp PROPERTIES
     CXX_STANDARD 14
     POSITION_INDEPENDENT_CODE ON
 )
 
-# è®¾ç½®CUDAå±æ€§
+# ÉèÖÃCUDAÊôĞÔ
 if(CUDA_FOUND)
     set_target_properties(electric_potential_cpp PROPERTIES
         CUDA_SEPARABLE_COMPILATION ON
@@ -36,25 +38,23 @@ if(CUDA_FOUND)
     target_include_directories(electric_potential_cpp PRIVATE ${CUDA_INCLUDE_DIRS})
 endif()
 
-# åŒ…å«ç›®å½•
+# °üº¬Ä¿Â¼
 target_include_directories(electric_potential_cpp PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/utility/src
     ${TORCH_INCLUDE_DIRS}
 )
 
-# å¦‚æœæœ‰CUDAï¼Œåˆ›å»ºCUDAç‰ˆæœ¬
+# Èç¹ûÓĞCUDA£¬´´½¨CUDA°æ±¾
 if(CUDA_FOUND)
-    pybind11_add_module(electric_potential_cuda SHARED 
-        src/electric_density_map_cuda.cpp
-        src/electric_force_cuda.cpp
+    pybind11_add_module(electric_potential_cuda SHARED
     )
     target_link_libraries(electric_potential_cuda PRIVATE torch ${Boost_LIBRARIES})
     set_target_properties(electric_potential_cuda PROPERTIES CXX_STANDARD 14 CUDA_SEPARABLE_COMPILATION ON)
     target_include_directories(electric_potential_cuda PRIVATE ${CUDA_INCLUDE_DIRS} ${TORCH_INCLUDE_DIRS})
 endif()
 
-# å®‰è£…æ¨¡å—
+# °²×°Ä£¿é
 install(TARGETS electric_potential_cpp DESTINATION dreamplace/ops/electric_potential)
 if(CUDA_FOUND)
     install(TARGETS electric_potential_cuda DESTINATION dreamplace/ops/electric_potential)

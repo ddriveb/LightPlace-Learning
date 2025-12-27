@@ -1,32 +1,36 @@
 cmake_minimum_required(VERSION 3.12)
 
-# æ”¶é›†logsumexp_wirelengthæ“ä½œæºæ–‡ä»¶
-set(LOGSUMEXP_WIRELENGTH_SOURCES)
-
-# æ”¶é›†æºæ–‡ä»¶
-file(GLOB LOGSUMEXP_WIRELENGTH_SOURCES "src/*.cpp")
+# ÊÕ¼¯logsumexp_wirelength²Ù×÷Ô´ÎÄ¼ş
+set(LOGSUMEXP_WIRELENGTH_SOURCES
+    src\logsumexp_wirelength_cuda_atomic.cpp
+    src\logsumexp_wirelength_cuda_merged.cpp
+    src\logsumexp_wirelength_merged.cpp
+)
 
 if(CUDA_FOUND)
-    file(GLOB CUDA_SOURCES "src/*.cu")
-    list(APPEND LOGSUMEXP_WIRELENGTH_SOURCES ${CUDA_SOURCES})
+    list(APPEND LOGSUMEXP_WIRELENGTH_SOURCES
+        src\integrate_net_weights_cuda_kernel.cu
+        src\logsumexp_wirelength_cuda_atomic_kernel.cu
+        src\logsumexp_wirelength_cuda_merged_kernel.cu
+    )
 endif()
 
-# åˆ›å»ºPythonç»‘å®š
+# ´´½¨Python°ó¶¨
 pybind11_add_module(logsumexp_wirelength_cpp SHARED ${LOGSUMEXP_WIRELENGTH_SOURCES})
 
-# é“¾æ¥åº“
+# Á´½Ó¿â
 target_link_libraries(logsumexp_wirelength_cpp PRIVATE 
     torch
     ${Boost_LIBRARIES}
 )
 
-# è®¾ç½®ç¼–è¯‘å±æ€§
+# ÉèÖÃ±àÒëÊôĞÔ
 set_target_properties(logsumexp_wirelength_cpp PROPERTIES
     CXX_STANDARD 14
     POSITION_INDEPENDENT_CODE ON
 )
 
-# è®¾ç½®CUDAå±æ€§
+# ÉèÖÃCUDAÊôĞÔ
 if(CUDA_FOUND)
     set_target_properties(logsumexp_wirelength_cpp PROPERTIES
         CUDA_SEPARABLE_COMPILATION ON
@@ -34,22 +38,23 @@ if(CUDA_FOUND)
     target_include_directories(logsumexp_wirelength_cpp PRIVATE ${CUDA_INCLUDE_DIRS})
 endif()
 
-# åŒ…å«ç›®å½•
+# °üº¬Ä¿Â¼
 target_include_directories(logsumexp_wirelength_cpp PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/utility/src
     ${TORCH_INCLUDE_DIRS}
 )
 
-# å¦‚æœæœ‰CUDAï¼Œåˆ›å»ºCUDAç‰ˆæœ¬
+# Èç¹ûÓĞCUDA£¬´´½¨CUDA°æ±¾
 if(CUDA_FOUND)
-    pybind11_add_module(logsumexp_wirelength_cuda SHARED ${CUDA_SOURCES})
+    pybind11_add_module(logsumexp_wirelength_cuda SHARED
+    )
     target_link_libraries(logsumexp_wirelength_cuda PRIVATE torch ${Boost_LIBRARIES})
     set_target_properties(logsumexp_wirelength_cuda PROPERTIES CXX_STANDARD 14 CUDA_SEPARABLE_COMPILATION ON)
     target_include_directories(logsumexp_wirelength_cuda PRIVATE ${CUDA_INCLUDE_DIRS} ${TORCH_INCLUDE_DIRS})
 endif()
 
-# å®‰è£…æ¨¡å—
+# °²×°Ä£¿é
 install(TARGETS logsumexp_wirelength_cpp DESTINATION dreamplace/ops/logsumexp_wirelength)
 if(CUDA_FOUND)
     install(TARGETS logsumexp_wirelength_cuda DESTINATION dreamplace/ops/logsumexp_wirelength)

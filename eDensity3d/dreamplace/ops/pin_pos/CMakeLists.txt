@@ -1,33 +1,35 @@
 cmake_minimum_required(VERSION 3.12)
 
-# æ”¶é›†pin_posæ“ä½œæºæ–‡ä»¶
+# ÊÕ¼¯pin_pos²Ù×÷Ô´ÎÄ¼ş
 set(PIN_POS_SOURCES
-    src/pin_pos.cpp
+    src\pin_pos.cpp
+    src\pin_pos_cuda.cpp
+    src\pin_pos_cuda_segment.cpp
 )
 
 if(CUDA_FOUND)
     list(APPEND PIN_POS_SOURCES
-        src/pin_pos_cuda.cpp
-        src/pin_pos_cuda_segment.cpp
+        src\pin_pos_cuda_kernel.cu
+        src\pin_pos_cuda_segment_kernel.cu
     )
 endif()
 
-# åˆ›å»ºPythonç»‘å®š
+# ´´½¨Python°ó¶¨
 pybind11_add_module(pin_pos_cpp SHARED ${PIN_POS_SOURCES})
 
-# é“¾æ¥åº“
+# Á´½Ó¿â
 target_link_libraries(pin_pos_cpp PRIVATE 
     torch
     ${Boost_LIBRARIES}
 )
 
-# è®¾ç½®ç¼–è¯‘å±æ€§
+# ÉèÖÃ±àÒëÊôĞÔ
 set_target_properties(pin_pos_cpp PROPERTIES
     CXX_STANDARD 14
     POSITION_INDEPENDENT_CODE ON
 )
 
-# è®¾ç½®CUDAå±æ€§
+# ÉèÖÃCUDAÊôĞÔ
 if(CUDA_FOUND)
     set_target_properties(pin_pos_cpp PROPERTIES
         CUDA_SEPARABLE_COMPILATION ON
@@ -35,31 +37,24 @@ if(CUDA_FOUND)
     target_include_directories(pin_pos_cpp PRIVATE ${CUDA_INCLUDE_DIRS})
 endif()
 
-# åŒ…å«ç›®å½•
+# °üº¬Ä¿Â¼
 target_include_directories(pin_pos_cpp PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/utility/src
     ${TORCH_INCLUDE_DIRS}
 )
 
-# å¦‚æœæœ‰CUDAï¼Œåˆ›å»ºCUDAç‰ˆæœ¬
+# Èç¹ûÓĞCUDA£¬´´½¨CUDA°æ±¾
 if(CUDA_FOUND)
-    pybind11_add_module(pin_pos_cuda SHARED 
-        src/pin_pos_cuda.cpp
-        src/pin_pos_cuda_segment.cpp
+    pybind11_add_module(pin_pos_cuda SHARED
     )
     target_link_libraries(pin_pos_cuda PRIVATE torch ${Boost_LIBRARIES})
     set_target_properties(pin_pos_cuda PROPERTIES CXX_STANDARD 14 CUDA_SEPARABLE_COMPILATION ON)
     target_include_directories(pin_pos_cuda PRIVATE ${CUDA_INCLUDE_DIRS} ${TORCH_INCLUDE_DIRS})
-    
-    pybind11_add_module(pin_pos_cuda_segment SHARED src/pin_pos_cuda_segment.cpp)
-    target_link_libraries(pin_pos_cuda_segment PRIVATE torch ${Boost_LIBRARIES})
-    set_target_properties(pin_pos_cuda_segment PROPERTIES CXX_STANDARD 14 CUDA_SEPARABLE_COMPILATION ON)
-    target_include_directories(pin_pos_cuda_segment PRIVATE ${CUDA_INCLUDE_DIRS} ${TORCH_INCLUDE_DIRS})
 endif()
 
-# å®‰è£…æ¨¡å—
+# °²×°Ä£¿é
 install(TARGETS pin_pos_cpp DESTINATION dreamplace/ops/pin_pos)
 if(CUDA_FOUND)
-    install(TARGETS pin_pos_cuda pin_pos_cuda_segment DESTINATION dreamplace/ops/pin_pos)
+    install(TARGETS pin_pos_cuda DESTINATION dreamplace/ops/pin_pos)
 endif()
